@@ -128,3 +128,7 @@ body {
 .light .bg-slate-700 {
   background-color: #e2e8f0 !important;
 }
+
+.light .bg-slate-800\/50 {
+  background-color: #e2e8f0 !important;
+}

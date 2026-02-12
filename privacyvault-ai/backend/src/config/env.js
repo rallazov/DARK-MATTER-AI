@@ -35,7 +35,8 @@ const env = {
   trustProxy: parseInt(process.env.TRUST_PROXY || '1', 10),
   premiumPrice: parseFloat(process.env.FEATURE_PREMIUM_PRICE || '9.99'),
   enableSwagger: String(process.env.ENABLE_SWAGGER || 'true') === 'true',
-  enableMockAi: String(process.env.ENABLE_MOCK_AI || 'true') === 'true'
+  enableMockAi: String(process.env.ENABLE_MOCK_AI || 'true') === 'true',
+  openaiApiKey: process.env.OPENAI_API_KEY
 };
 
 module.exports = { env };

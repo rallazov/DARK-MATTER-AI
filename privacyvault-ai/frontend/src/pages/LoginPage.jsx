@@ -13,6 +13,7 @@ export default function LoginPage() {
   const dispatch = useDispatch();
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [devLink, setDevLink] = useState(null);
 
   const {
     register,
@@ -25,6 +26,14 @@ export default function LoginPage() {
 
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
+    const urlError = params.get('error');
+    if (urlError) {
+      const messages = {
+        oauth_not_configured: 'Google and GitHub sign-in require real OAuth credentials. Use the magic link below instead.',
+        oauth_failed: 'OAuth sign-in failed. Please try the magic link instead.'
+      };
+      setError(messages[urlError] || urlError);
+    }
     if (token) {
       dispatch(verifyMagicLink(token))
         .unwrap()
@@ -38,9 +47,15 @@ export default function LoginPage() {
   const onSubmit = (data) => {
     setMessage('');
     setError('');
+    setDevLink(null);
     dispatch(requestMagicLink(data.email))
       .unwrap()
-      .then(() => setMessage('Magic link sent. Check your inbox.'))
+      .then((res) => {
+        setMessage('Magic link sent. Check your inbox.');
+        if (res.devMagicLink) {
+          setDevLink(res.devMagicLink);
+        }
+      })
       .catch((err) => setError(`Oops, let's try that again. ${err.message}`));
   };
 
@@ -72,6 +87,11 @@ export default function LoginPage() {
         </label>
         {errors.email ? <p className="text-sm text-rose-300">{errors.email.message}</p> : null}
         {message ? <p className="text-sm text-emerald-300">{message}</p> : null}
+        {devLink ? (
+          <p className="text-sm text-slate-400">
+            Dev mode: <a className="text-cyan-400 underline" href={devLink}>Click here to sign in</a>
+          </p>
+        ) : null}
         {error ? <p className="text-sm text-rose-300">{error}</p> : null}
         <button className="btn-primary" type="submit">
           Send Magic Link

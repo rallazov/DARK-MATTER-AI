@@ -34,14 +34,14 @@ router.get('/csrf-token', issueCsrfToken);
 
 router.get('/oauth/google', authLimiter, (req, res, next) => {
   if (!strategyAvailable('google')) {
-    return res.status(503).json({ error: 'Google OAuth is not configured' });
+    return res.redirect(`${env.frontendUrl}/login?error=oauth_not_configured`);
   }
   return passport.authenticate('google', { scope: ['profile', 'email'], session: false })(req, res, next);
 });
 
 router.get('/oauth/github', authLimiter, (req, res, next) => {
   if (!strategyAvailable('github')) {
-    return res.status(503).json({ error: 'GitHub OAuth is not configured' });
+    return res.redirect(`${env.frontendUrl}/login?error=oauth_not_configured`);
   }
   return passport.authenticate('github', { session: false })(req, res, next);
 });

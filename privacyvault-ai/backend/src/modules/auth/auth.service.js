@@ -75,6 +75,10 @@ async function requestMagicLink(email) {
     html: `<p>Click to sign in:</p><p><a href="${link}">${link}</a></p><p>This link expires in ${env.magicLinkTtlMinutes} minutes.</p>`
   });
 
+  // In development, include link in response when SMTP may not be running (e.g. no Mailpit)
+  if (env.nodeEnv === 'development') {
+    return { message: 'Magic link sent.', devMagicLink: link };
+  }
   return { message: 'Magic link sent.' };
 }
 

@@ -131,6 +131,16 @@ export default function DashboardPage() {
 export function SettingsPanel() {
   const [exportFormat, setExportFormat] = useState('json');
   const [message, setMessage] = useState('');
+  const [exportError, setExportError] = useState('');
+
+  const handleExport = async () => {
+    setExportError('');
+    try {
+      await api.download(`/api/privacy/export?format=${exportFormat}`, `privacy-export.${exportFormat}`);
+    } catch (err) {
+      setExportError(err.message);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -138,9 +148,9 @@ export function SettingsPanel() {
       <div className="card space-y-3 p-4">
         <h3 className="font-semibold">Privacy Controls</h3>
         <div className="flex flex-wrap gap-2">
-          <a href={`/api/privacy/export?format=${exportFormat}`} className="btn-secondary">
+          <button type="button" className="btn-secondary" onClick={handleExport}>
             Export Data
-          </a>
+          </button>
           <select
             className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
             value={exportFormat}
@@ -160,6 +170,7 @@ export function SettingsPanel() {
           </button>
         </div>
         {message ? <p className="text-sm text-amber-200">{message}</p> : null}
+        {exportError ? <p className="text-sm text-rose-300">{exportError}</p> : null}
       </div>
     </div>
   );

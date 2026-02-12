@@ -1,12 +1,27 @@
+import { useState } from 'react';
+import { api } from '../../api/client';
+
 export default function TaskTimeline({ tasks, onDelete }) {
+  const [exportError, setExportError] = useState('');
+
+  const handleExportCsv = async () => {
+    setExportError('');
+    try {
+      await api.download('/api/tasks/export/csv', 'tasks.csv');
+    } catch (err) {
+      setExportError(err.message);
+    }
+  };
+
   return (
     <div className="card p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-semibold">Task History</h3>
-        <a href="/api/tasks/export/csv" className="text-sm text-teal-300 hover:underline">
+        <button type="button" className="text-sm text-teal-300 hover:underline" onClick={handleExportCsv}>
           Export CSV
-        </a>
+        </button>
       </div>
+      {exportError ? <p className="mb-2 text-sm text-rose-300">{exportError}</p> : null}
       <ul className="space-y-3">
         {tasks.map((task) => (
           <li key={task._id} className="rounded-lg border border-slate-700 p-3">
@@ -15,6 +30,18 @@ export default function TaskTimeline({ tasks, onDelete }) {
               <span className="text-xs uppercase text-slate-400">{task.status}</span>
             </div>
             <p className="mt-1 text-sm text-slate-400">{task.type} | {new Date(task.createdAt).toLocaleString()}</p>
+            {task.output?.text ? (
+              <p className="mt-2 rounded-lg bg-slate-800/50 p-2 text-sm">{task.output.text}</p>
+            ) : null}
+            {task.output?.image?.url ? (
+              <div className="mt-2">
+                <img
+                  src={task.output.image.url}
+                  alt={task.output.image.prompt || 'Task output'}
+                  className="max-h-48 rounded-lg object-contain"
+                />
+              </div>
+            ) : null}
             <div className="mt-2 flex gap-2">
               <button className="text-xs text-rose-300 hover:underline" onClick={() => onDelete(task._id)}>
                 Delete

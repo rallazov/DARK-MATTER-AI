@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api/client';
+import UploadZone from '../components/common/UploadZone';
 
 const avatars = ['shield', 'owl', 'fox', 'saturn'];
 
@@ -9,9 +10,51 @@ export default function OnboardingPage() {
   const [theme, setTheme] = useState('aurora');
   const [avatar, setAvatar] = useState('shield');
   const [preferences, setPreferences] = useState({ voiceEnabled: true, imageEnabled: true, videoEnabled: false });
+  const [demoPrompt, setDemoPrompt] = useState('What are the main benefits of a private AI vault for personal data?');
+  const [demoFile, setDemoFile] = useState(null);
+  const [demoResult, setDemoResult] = useState(null);
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [demoError, setDemoError] = useState('');
 
   const next = () => setStep((s) => Math.min(3, s + 1));
   const back = () => setStep((s) => Math.max(1, s - 1));
+
+  const runDemo = async () => {
+    setDemoError('');
+    setDemoResult(null);
+    setDemoLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('vaultName', vaultName);
+      formData.append('prompt', demoPrompt);
+      if (demoFile) formData.append('file', demoFile);
+
+      const token = localStorage.getItem('pvai_access_token');
+      const csrfToken = localStorage.getItem('pvai_csrf_token');
+      const headers = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      if (csrfToken) headers['x-csrf-token'] = csrfToken;
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/onboarding/demo`, {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: formData
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Demo failed');
+      }
+
+      const { task } = await res.json();
+      setDemoResult(task);
+    } catch (err) {
+      setDemoError(err.message);
+    } finally {
+      setDemoLoading(false);
+    }
+  };
 
   const finish = async () => {
     await api.post('/api/onboarding/complete', { vaultName, theme, avatar, preferences });
@@ -73,10 +116,33 @@ export default function OnboardingPage() {
       {step === 3 ? (
         <section className="card mt-6 p-5">
           <h2 className="text-xl font-semibold">Quick private demo</h2>
-          <p className="mt-2 text-slate-300">Upload a photo and watch AI summarize it privately inside your own vault.</p>
-          <div className="mt-4 rounded-lg border border-dashed border-teal-500/60 p-6 text-center">
-            Interactive demo placeholder
-          </div>
+          <p className="mt-2 text-slate-300">Try the AI in your vault. Ask a question or upload a photo to summarize.</p>
+          <label className="mt-4 block text-sm">
+            Prompt
+            <textarea
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+              rows={3}
+              value={demoPrompt}
+              onChange={(e) => setDemoPrompt(e.target.value)}
+              placeholder="Ask anything..."
+            />
+          </label>
+          <UploadZone onFile={setDemoFile} />
+          <button
+            type="button"
+            className="btn-primary mt-3"
+            onClick={runDemo}
+            disabled={demoLoading}
+          >
+            {demoLoading ? 'Running...' : 'Run Demo'}
+          </button>
+          {demoError ? <p className="mt-2 text-sm text-rose-300">{demoError}</p> : null}
+          {demoResult?.output?.text ? (
+            <div className="mt-4 rounded-lg border border-teal-500/40 bg-teal-500/10 p-4">
+              <p className="text-sm font-medium text-teal-200">AI Response</p>
+              <p className="mt-2 text-sm">{demoResult.output.text}</p>
+            </div>
+          ) : null}
         </section>
       ) : null}
 
