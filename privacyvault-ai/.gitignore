@@ -12,6 +12,7 @@ yarn-error.log*
 pnpm-debug.log*
 backend/uploads/*
 !backend/uploads/.gitkeep
+backend/backend/
 backend/logs
 playwright-report
 test-results
