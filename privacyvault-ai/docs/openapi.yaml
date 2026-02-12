@@ -1,0 +1,47 @@
+openapi: 3.0.3
+info:
+  title: PrivacyVault AI API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+  /api/auth/magic-link/request:
+    post:
+      summary: Request magic link
+      responses:
+        '200':
+          description: Sent
+  /api/auth/magic-link/verify:
+    post:
+      summary: Verify magic link
+      responses:
+        '200':
+          description: Session issued
+  /api/vaults:
+    get:
+      summary: List vaults
+      responses:
+        '200':
+          description: Vault list
+    post:
+      summary: Create vault
+      responses:
+        '201':
+          description: Created
+  /api/tasks:
+    get:
+      summary: List tasks
+      responses:
+        '200':
+          description: Task list
+    post:
+      summary: Create task
+      responses:
+        '201':
+          description: Task created

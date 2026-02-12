@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: privacyvault-core-service
+  labels:
+    app: privacyvault-ai
+    component: core-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: privacyvault-ai
+      component: core-service
+  template:
+    metadata:
+      labels:
+        app: privacyvault-ai
+        component: core-service
+    spec:
+      containers:
+        - name: core-service
+          image: privacyvault-ai:latest
+          command: ["node", "backend/src/server.js"]
+          env:
+            - name: SERVICE_MODE
+              value: "core"
+          envFrom:
+            - configMapRef:
+                name: privacyvault-config
+            - secretRef:
+                name: privacyvault-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: privacyvault-core-service
+spec:
+  selector:
+    app: privacyvault-ai
+    component: core-service
+  ports:
+    - port: 8082
+      targetPort: 8080

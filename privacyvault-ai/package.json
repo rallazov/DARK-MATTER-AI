@@ -1,0 +1,26 @@
+{
+  "name": "privacyvault-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Privacy-first multimodal SaaS monolith with modular boundaries",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
+    "test": "npm run test -w backend && npm run test -w frontend",
+    "lint": "npm run lint -w backend && npm run lint -w frontend",
+    "seed": "npm run seed -w backend",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "playwright": "^1.51.0"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  }
+}

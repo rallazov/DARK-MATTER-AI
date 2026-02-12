@@ -1,0 +1,9 @@
+{
+  "name": "@privacyvault/shared",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "build": "echo 'shared package is plain js; no build needed'"
+  }
+}

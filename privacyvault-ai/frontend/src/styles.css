@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-main: #020617;
+  --bg-card: #0f172a;
+  --fg-main: #e2e8f0;
+  --fg-muted: #94a3b8;
+  --accent: #0d9488;
+}
+
+.light {
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --fg-main: #0f172a;
+  --fg-muted: #475569;
+  --accent: #0f766e;
+}
+
+body {
+  background: radial-gradient(circle at 0% 0%, rgba(15, 118, 110, 0.25), transparent 35%),
+    radial-gradient(circle at 100% 100%, rgba(249, 115, 22, 0.2), transparent 35%),
+    var(--bg-main);
+  color: var(--fg-main);
+  min-height: 100vh;
+}
+
+.card {
+  @apply rounded-2xl border border-slate-800/60 bg-slate-900/70 backdrop-blur;
+  background-color: var(--bg-card);
+}
+
+.light .card {
+  @apply border-slate-200;
+}
+
+.btn-primary {
+  @apply rounded-xl px-4 py-2 font-semibold text-white transition;
+  background: linear-gradient(135deg, #0d9488, #0f766e);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.07);
+}
+
+.btn-secondary {
+  @apply rounded-xl border border-slate-700 px-4 py-2;
+}

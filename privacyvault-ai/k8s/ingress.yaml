@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: privacyvault-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "30m"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - app.privacyvault.ai
+      secretName: privacyvault-tls
+  rules:
+    - host: app.privacyvault.ai
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: privacyvault-monolith
+                port:
+                  number: 80
