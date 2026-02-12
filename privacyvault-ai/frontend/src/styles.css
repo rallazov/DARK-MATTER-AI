@@ -11,8 +11,8 @@
 }
 
 .light {
-  --bg-main: #f8fafc;
-  --bg-card: #ffffff;
+  --bg-main: #f1f5f9;
+  --bg-card: #f8fafc;
   --fg-main: #0f172a;
   --fg-muted: #475569;
   --accent: #0f766e;
@@ -24,6 +24,12 @@ body {
     var(--bg-main);
   color: var(--fg-main);
   min-height: 100vh;
+}
+
+.light body {
+  background: radial-gradient(circle at 0% 0%, rgba(15, 118, 110, 0.08), transparent 35%),
+    radial-gradient(circle at 100% 100%, rgba(249, 115, 22, 0.06), transparent 35%),
+    var(--bg-main);
 }
 
 .card {
@@ -72,8 +78,15 @@ body {
   color: #0f766e !important;
 }
 
-.light .text-teal-200 {
+.light .text-teal-200,
+.light .text-teal-100,
+.light .text-teal-300 {
   color: #0f766e !important;
+}
+
+.light .text-amber-300,
+.light .text-amber-200 {
+  color: #b45309 !important;
 }
 
 /* Inputs and borders */
@@ -102,8 +115,13 @@ body {
   background-color: #e2e8f0 !important;
 }
 
-.light .bg-teal-500\/20 {
-  background-color: rgba(15, 118, 110, 0.15) !important;
+.light .bg-teal-500\/20,
+.light .bg-teal-500\/10 {
+  background-color: rgba(15, 118, 110, 0.12) !important;
+}
+
+.light .border-teal-500\/40 {
+  border-color: rgba(15, 118, 110, 0.3) !important;
 }
 
 /* Metric card, loader, error boundary inherit via body but have explicit classes */
