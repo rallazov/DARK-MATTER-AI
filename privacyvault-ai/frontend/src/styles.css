@@ -47,3 +47,66 @@ body {
 .btn-secondary {
   @apply rounded-xl border border-slate-700 px-4 py-2;
 }
+
+/* Light mode: fix text/background contrast (light gray text blends on light bg) */
+.light .text-slate-300,
+.light .text-slate-400,
+.light .text-slate-500 {
+  color: var(--fg-muted) !important;
+}
+
+.light .text-rose-300,
+.light .text-rose-200 {
+  color: #b91c1c !important;
+}
+
+.light .border-rose-600\/70 {
+  border-color: rgba(185, 28, 28, 0.7) !important;
+}
+
+.light .text-emerald-300 {
+  color: #15803d !important;
+}
+
+.light .text-cyan-400 {
+  color: #0f766e !important;
+}
+
+.light .text-teal-200 {
+  color: #0f766e !important;
+}
+
+/* Inputs and borders */
+.light .bg-slate-900,
+.light .bg-slate-800 {
+  background-color: #f1f5f9 !important;
+}
+
+.light .border-slate-700,
+.light .border-slate-800 {
+  border-color: #e2e8f0 !important;
+}
+
+.light .border-slate-600 {
+  border-color: #cbd5e1 !important;
+}
+
+.light .btn-secondary {
+  border-color: #cbd5e1 !important;
+  color: var(--fg-main);
+}
+
+/* Sidebar/list hovers */
+.light .hover\:bg-slate-800:hover,
+.light .hover\:bg-slate-800:focus {
+  background-color: #e2e8f0 !important;
+}
+
+.light .bg-teal-500\/20 {
+  background-color: rgba(15, 118, 110, 0.15) !important;
+}
+
+/* Metric card, loader, error boundary inherit via body but have explicit classes */
+.light .bg-slate-700 {
+  background-color: #e2e8f0 !important;
+}
