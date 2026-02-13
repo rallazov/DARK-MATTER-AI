@@ -24,6 +24,7 @@ const { auditRouter } = require('./modules/audit/audit.routes');
 const { adminRouter } = require('./modules/admin/admin.routes');
 const { billingRouter } = require('./modules/billing/billing.routes');
 const { healthRouter } = require('./modules/health/health.routes');
+const { stripeWebhookRouter } = require('./modules/webhooks/stripe.routes');
 const { webhooksRouter } = require('./modules/webhooks/webhooks.routes');
 
 function createApp() {
@@ -53,11 +54,12 @@ function createApp() {
     })
   );
 
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
   app.use(passport.initialize());
   app.use('/api', apiLimiter);
+  app.use('/api/webhooks/stripe', stripeWebhookRouter);
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true }));
 
   app.use('/api/auth/refresh', verifyCsrf);
   app.use('/api/auth/logout', verifyCsrf);
@@ -80,6 +82,7 @@ function createApp() {
 
   if (env.enableSwagger) {
     app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(buildOpenApiSpec()));
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(buildOpenApiSpec()));
   }
 
   const frontendDist = path.resolve(process.cwd(), 'frontend/dist');

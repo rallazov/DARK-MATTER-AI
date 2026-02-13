@@ -9,19 +9,39 @@ services:
     volumes:
       - mongo_data:/data/db
 
-  app:
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: privacyvault-app
+      dockerfile: backend/Dockerfile
+    container_name: privacyvault-backend
     env_file:
       - .env
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/privacyvault_ai
+      - FRONTEND_URL=http://localhost:5173
     ports:
       - '8080:8080'
     depends_on:
       - mongo
     volumes:
+      - ./:/app
+      - /app/node_modules
       - ./backend/uploads:/app/backend/uploads
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: privacyvault-frontend
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    ports:
+      - '5173:5173'
+    depends_on:
+      - backend
+    volumes:
+      - ./:/app
+      - /app/node_modules
 
 volumes:
   mongo_data:

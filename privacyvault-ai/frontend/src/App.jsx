@@ -4,6 +4,12 @@ import LoginPage from './pages/LoginPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import OnboardingPage from './pages/OnboardingPage';
 import DashboardPage from './pages/DashboardPage';
+import VaultsPage from './pages/VaultsPage';
+import TasksPage from './pages/TasksPage';
+import BotsPage from './pages/BotsPage';
+import IntegrationsPage from './pages/IntegrationsPage';
+import SettingsPage from './pages/SettingsPage';
+import UpgradePage from './pages/UpgradePage';
 import AdminPage from './pages/AdminPage';
 import ProtectedRoute from './routes/ProtectedRoute';
 import AdminRoute from './routes/AdminRoute';
@@ -32,6 +38,54 @@ export default function App() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vaults"
+          element={
+            <ProtectedRoute>
+              <VaultsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tasks"
+          element={
+            <ProtectedRoute>
+              <TasksPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bots"
+          element={
+            <ProtectedRoute>
+              <BotsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/integrations"
+          element={
+            <ProtectedRoute>
+              <IntegrationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/upgrade"
+          element={
+            <ProtectedRoute>
+              <UpgradePage />
             </ProtectedRoute>
           }
         />

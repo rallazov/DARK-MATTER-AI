@@ -6,6 +6,9 @@ const initialState = {
   status: 'idle',
   stream: {},
   error: null,
+  createStatus: 'idle',
+  createError: null,
+  latestCompletedTaskId: null,
   filters: {
     search: '',
     status: ''
@@ -64,8 +67,20 @@ const taskSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       })
+      .addCase(createTask.pending, (state) => {
+        state.createStatus = 'loading';
+        state.createError = null;
+      })
       .addCase(createTask.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
+        state.createStatus = 'succeeded';
+        if (action.payload?.status === 'completed') {
+          state.latestCompletedTaskId = action.payload._id;
+        }
+      })
+      .addCase(createTask.rejected, (state, action) => {
+        state.createStatus = 'failed';
+        state.createError = action.error?.message || 'Failed to run task';
       })
       .addCase(deleteTask.fulfilled, (state, action) => {
         state.items = state.items.filter((task) => task._id !== action.payload);

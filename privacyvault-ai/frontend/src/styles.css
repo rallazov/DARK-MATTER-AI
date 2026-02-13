@@ -54,6 +54,21 @@ body {
   @apply rounded-xl border border-slate-700 px-4 py-2;
 }
 
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation: confetti-fall 1.2s ease-in forwards;
+}
+
 /* Light mode: fix text/background contrast (light gray text blends on light bg) */
 .light .text-slate-300,
 .light .text-slate-400,

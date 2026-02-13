@@ -6,9 +6,12 @@ const taskSchema = new mongoose.Schema(
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     type: { type: String, enum: ['text', 'image', 'voice', 'video', 'automation'], default: 'text' },
     prompt: { type: String, trim: true, maxlength: 10_000 },
+    mediaUrl: { type: String },
+    response: { type: mongoose.Schema.Types.Mixed, default: {} },
     input: { type: mongoose.Schema.Types.Mixed, default: {} },
     output: { type: mongoose.Schema.Types.Mixed, default: {} },
     status: { type: String, enum: ['queued', 'processing', 'completed', 'failed'], default: 'queued', index: true },
+    completedAt: { type: Date },
     metadata: {
       ocrText: { type: String },
       transcript: { type: String },

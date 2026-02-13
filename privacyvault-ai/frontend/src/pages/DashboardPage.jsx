@@ -1,44 +1,29 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { connectSocket, getSocket } from '../api/socket';
-import Sidebar from '../components/layout/Sidebar';
-import ThemeToggle from '../components/common/ThemeToggle';
+import AppLayout from '../components/layout/AppLayout';
 import MetricCard from '../components/common/MetricCard';
 import VaultCards from '../components/dashboard/VaultCards';
 import TaskComposer from '../components/dashboard/TaskComposer';
 import TaskTimeline from '../components/dashboard/TaskTimeline';
-import BotsPanel from '../components/dashboard/BotsPanel';
-import IntegrationsPanel from '../components/dashboard/IntegrationsPanel';
 import PrivacyScoreMeter from '../components/dashboard/PrivacyScoreMeter';
 import NudgeBanner from '../components/dashboard/NudgeBanner';
-import { fetchCurrentUser, logout } from '../slices/authSlice';
-import { fetchVaults } from '../slices/vaultSlice';
-import { fetchBots } from '../slices/botsSlice';
-import { fetchIntegrations } from '../slices/integrationsSlice';
+import ActivityFeed from '../components/dashboard/ActivityFeed';
+import ConfettiBurst from '../components/common/ConfettiBurst';
 import { appendStreamChunk, clearStream, deleteTask, fetchTasks } from '../slices/taskSlice';
-import { fetchPrivateAnalytics, fetchPrivacyScore } from '../slices/progressSlice';
 import { SOCKET_EVENTS } from '../utils/events';
-import { api } from '../api/client';
 
 export default function DashboardPage() {
   const dispatch = useDispatch();
-  const [active, setActive] = useState('Home');
   const [toast, setToast] = useState('');
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [lastMilestone, setLastMilestone] = useState(0);
 
   const { user } = useSelector((state) => state.auth);
-  const { items: vaults, selectedVaultId } = useSelector((state) => state.vaults);
+  const { selectedVaultId } = useSelector((state) => state.vaults);
   const tasks = useSelector((state) => state.tasks.items);
   const insights = useSelector((state) => state.progress.insights);
-
-  useEffect(() => {
-    dispatch(fetchCurrentUser());
-    dispatch(fetchVaults());
-    dispatch(fetchPrivateAnalytics());
-    dispatch(fetchBots());
-    dispatch(fetchIntegrations());
-    dispatch(fetchPrivacyScore());
-    api.get('/api/auth/csrf-token').then((data) => localStorage.setItem('pvai_csrf_token', data.csrfToken));
-  }, [dispatch]);
+  const privacyScore = useSelector((state) => state.progress.privacyScore);
 
   useEffect(() => {
     if (selectedVaultId) {
@@ -80,6 +65,8 @@ export default function DashboardPage() {
   }, [selectedVaultId]);
 
   const streak = insights?.currentStreak || user?.progress?.currentStreak || 0;
+  const productivity = insights?.productivityScore || 0;
+  const level = Math.max(1, Math.floor(productivity / 20) + 1);
 
   const homeView = useMemo(
     () => (
@@ -88,151 +75,51 @@ export default function DashboardPage() {
         <div className="grid gap-3 md:grid-cols-3">
           <MetricCard label="Tasks Completed" value={insights?.tasksCompleted || 0} hint="Private, vault-scoped" />
           <MetricCard label="Time Saved" value={`${insights?.timeSavedHours || 0}h`} hint="This week" />
-          <MetricCard label="Multimodal Tasks" value={insights?.multimodalTasks || 0} hint="Image + voice + video" />
+          <MetricCard label="Privacy Score" value={privacyScore !== null && privacyScore !== undefined ? `${privacyScore}%` : '—'} hint="Live secure posture" />
+        </div>
+        <div className="card p-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold">Level Progress</h3>
+            <span className="text-sm text-teal-300">Level {level}</span>
+          </div>
+          <div className="mt-3 h-2 rounded-full bg-slate-700">
+            <div className="h-2 rounded-full bg-teal-500" style={{ width: `${Math.min((productivity % 20) * 5, 100)}%` }} />
+          </div>
+          <p className="mt-2 text-xs text-slate-400">Complete tasks and keep streaks to earn badges and level up.</p>
         </div>
       </div>
     ),
-    [insights, streak]
+    [insights, streak, level, productivity, privacyScore]
   );
 
-  return (
-    <main className="mx-auto max-w-7xl px-4 py-4 md:px-6 md:py-6">
-      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Welcome back, {user?.displayName || user?.email}</h1>
-          <p className="text-sm text-slate-300">Run private multimodal workflows inside isolated vaults.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {user?.role === 'admin' ? (
-            <a href="/admin" className="btn-secondary">
-              Admin
-            </a>
-          ) : null}
-          <ThemeToggle />
-          <button className="btn-secondary" onClick={() => dispatch(logout()).then(() => (window.location.href = '/login'))}>
-            Logout
-          </button>
-        </div>
-      </header>
-
-      {toast ? <div className="mb-3 rounded-lg border border-teal-500/40 bg-teal-500/10 p-2 text-sm text-teal-100">{toast}</div> : null}
-
-      <div className="grid gap-4 md:grid-cols-[240px,1fr]">
-        <Sidebar active={active} setActive={setActive} />
-
-        <section className="space-y-4">
-          {active === 'Home' ? homeView : null}
-          {active === 'Vaults' || active === 'Home' ? <VaultCards /> : null}
-          {selectedVaultId ? (
-            <p className="text-sm text-slate-400">
-              Viewing: <span className="font-medium text-slate-300">{vaults.find((v) => v._id === selectedVaultId)?.name || 'Vault'}</span>
-              {' · '}Tasks and new tasks below go to this vault.
-            </p>
-          ) : vaults.length > 0 ? (
-            <p className="text-sm text-slate-400">Click a vault above to view its tasks and create new ones.</p>
-          ) : null}
-          {active === 'Tasks' || active === 'Home' ? <TaskComposer /> : null}
-          {active === 'Tasks' || active === 'Home' ? (
-            <TaskTimeline tasks={tasks} onDelete={(taskId) => dispatch(deleteTask(taskId))} />
-          ) : null}
-          {active === 'Bots' ? <BotsPanel /> : null}
-          {active === 'Integrations' ? <IntegrationsPanel /> : null}
-          {active === 'Settings' || active === 'Home' ? <SettingsPanel /> : null}
-          {active === 'Upgrade' ? <UpgradePanel vaultCount={vaults.length} /> : null}
-        </section>
-      </div>
-    </main>
-  );
-}
-
-export function SettingsPanel() {
-  const [exportFormat, setExportFormat] = useState('json');
-  const [message, setMessage] = useState('');
-  const [exportError, setExportError] = useState('');
-
-  const handleExport = async () => {
-    setExportError('');
-    try {
-      await api.download(`/api/privacy/export?format=${exportFormat}`, `privacy-export.${exportFormat}`);
-    } catch (err) {
-      setExportError(err.message);
+  useEffect(() => {
+    const milestone = streak >= 7 ? 7 : streak >= 3 ? 3 : streak >= 1 ? 1 : 0;
+    if (milestone > 0 && milestone !== lastMilestone) {
+      setShowConfetti(true);
+      setLastMilestone(milestone);
+      window.setTimeout(() => setShowConfetti(false), 1200);
     }
-  };
+  }, [streak, lastMilestone]);
 
   return (
-    <div className="space-y-4">
-      <PrivacyScoreMeter />
-      <div className="card space-y-3 p-4">
-        <h3 className="font-semibold">Privacy Controls</h3>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" className="btn-secondary" onClick={handleExport}>
-            Export Data
-          </button>
-          <select
-            className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
-            value={exportFormat}
-            onChange={(event) => setExportFormat(event.target.value)}
-          >
-            <option value="json">JSON</option>
-            <option value="csv">CSV</option>
-          </select>
-          <button
-            className="rounded-xl border border-rose-600/70 px-4 py-2 text-rose-200"
-            onClick={async () => {
-              await api.post('/api/privacy/reset', { confirmText: 'DELETE' });
-              setMessage('Vault data wiped. This action is irreversible.');
-            }}
-          >
-            Reset Vault Data
-          </button>
+    <AppLayout title={`Welcome back, ${user?.displayName || user?.email || 'Private User'}`} subtitle="Operate secure multimodal workflows inside isolated AI vaults.">
+      <ConfettiBurst active={showConfetti} />
+      {toast ? <div className="rounded-lg border border-teal-500/40 bg-teal-500/10 p-2 text-sm text-teal-100">{toast}</div> : null}
+
+      {homeView}
+      <VaultCards />
+      {selectedVaultId ? (
+        <TaskComposer />
+      ) : (
+        <p className="text-sm text-slate-400">Click a vault to start creating private tasks and automations.</p>
+      )}
+      <div className="grid gap-4 xl:grid-cols-2">
+        <TaskTimeline tasks={tasks} onDelete={(taskId) => dispatch(deleteTask(taskId))} />
+        <div className="space-y-4">
+          <PrivacyScoreMeter />
+          <ActivityFeed limit={10} />
         </div>
-        {message ? <p className="text-sm text-amber-200">{message}</p> : null}
-        {exportError ? <p className="text-sm text-rose-300">{exportError}</p> : null}
       </div>
-    </div>
-  );
-}
-
-export function UpgradePanel({ vaultCount }) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const user = useSelector((state) => state.auth.user);
-
-  const handleStartPremium = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      const { url } = await api.post('/api/billing/checkout');
-      if (url) window.location.href = url;
-      else setError('Checkout not configured');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (user?.plan === 'premium') {
-    return (
-      <div className="card p-5">
-        <h3 className="text-xl font-semibold">Premium</h3>
-        <p className="mt-2 text-slate-300">You have full access to MFA, share links, and unlimited storage.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="card p-5">
-      <h3 className="text-xl font-semibold">Upgrade to Premium</h3>
-      <p className="mt-2 text-slate-300">
-        Unlock MFA, encrypted collaboration links, and unlimited multimodal storage for $9.99/month.
-      </p>
-      <p className="mt-2 text-sm text-amber-300">Limited founder-led onboarding slots this month.</p>
-      <p className="mt-4 text-sm text-slate-400">Current vault count: {vaultCount}</p>
-      <button className="btn-primary mt-4" onClick={handleStartPremium} disabled={loading}>
-        {loading ? 'Redirecting…' : 'Start Premium'}
-      </button>
-      {error ? <p className="mt-2 text-sm text-rose-300">{error}</p> : null}
-    </div>
+    </AppLayout>
   );
 }

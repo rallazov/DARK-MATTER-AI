@@ -59,6 +59,24 @@ function buildOpenApiSpec() {
             responses: { 200: { description: 'Reset completed' } }
           }
         },
+        '/api/users/privacy-score': {
+          get: {
+            summary: 'Compute user privacy score and contributing factors',
+            responses: { 200: { description: 'Privacy score payload' } }
+          }
+        },
+        '/api/users/security-status': {
+          get: {
+            summary: 'Return MFA and integration security posture',
+            responses: { 200: { description: 'Security status' } }
+          }
+        },
+        '/api/users/activity': {
+          get: {
+            summary: 'Recent private user activity feed',
+            responses: { 200: { description: 'Activity events' } }
+          }
+        },
         '/api/admin/metrics': {
           get: {
             summary: 'Founder admin anonymized metrics',

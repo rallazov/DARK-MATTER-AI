@@ -8,7 +8,16 @@ const { assertVaultAccess } = require('../common/vaultAccess');
 const { scheduleBot, unscheduleBot, runBot } = require('../../services/botScheduler');
 const { createBotValidation, updateBotValidation, botIdValidation } = require('./bots.validation');
 
+// TODO: extract to microservice (bot-service boundary)
 const router = express.Router();
+
+function deriveCronExpression({ triggerType, schedulePreset, cronExpression }) {
+  if (triggerType !== 'cron') return undefined;
+  if (schedulePreset === 'daily') return '0 9 * * *';
+  if (schedulePreset === 'weekly') return '0 9 * * 1';
+  if (schedulePreset === 'custom') return cronExpression;
+  return cronExpression;
+}
 
 router.get('/', requireAuth, async (req, res, next) => {
   try {
@@ -26,15 +35,24 @@ router.post('/', requireAuth, createBotValidation, validate, async (req, res, ne
     const access = await assertVaultAccess({ userId: req.user.id, vaultId: req.body.vaultId, minRole: 'editor' });
     if (!access) return res.status(404).json({ error: 'Vault not found' });
 
+    const derivedCron = deriveCronExpression({
+      triggerType: req.body.triggerType,
+      schedulePreset: req.body.schedulePreset || 'none',
+      cronExpression: req.body.cronExpression
+    });
+
     const bot = await BotAutomation.create({
       vaultId: req.body.vaultId,
       userId: req.user.id,
       name: req.body.name,
       description: req.body.description,
       triggerType: req.body.triggerType,
-      cronExpression: req.body.cronExpression,
+      schedulePreset: req.body.schedulePreset || (req.body.triggerType === 'cron' ? 'custom' : 'none'),
+      cronExpression: derivedCron,
       webhookSecret: req.body.triggerType === 'webhook' ? crypto.randomBytes(24).toString('hex') : undefined,
-      workflowType: req.body.workflowType || 'custom'
+      workflowType: req.body.workflowType || 'custom',
+      defaultTaskType: req.body.defaultTaskType || 'text',
+      defaultPromptTemplate: req.body.defaultPromptTemplate || ''
     });
 
     scheduleBot(bot, req.app.get('io'));
@@ -58,11 +76,20 @@ router.patch('/:botId', requireAuth, updateBotValidation, validate, async (req, 
     const bot = await BotAutomation.findOne({ _id: req.params.botId, userId: req.user.id });
     if (!bot) return res.status(404).json({ error: 'Bot not found' });
 
+    const derivedCron = deriveCronExpression({
+      triggerType: bot.triggerType,
+      schedulePreset: req.body.schedulePreset || bot.schedulePreset,
+      cronExpression: req.body.cronExpression || bot.cronExpression
+    });
+
     Object.assign(bot, {
       ...(req.body.name ? { name: req.body.name } : {}),
       ...(req.body.description ? { description: req.body.description } : {}),
-      ...(req.body.cronExpression ? { cronExpression: req.body.cronExpression } : {}),
-      ...(req.body.enabled !== undefined ? { enabled: req.body.enabled } : {})
+      ...(req.body.schedulePreset ? { schedulePreset: req.body.schedulePreset } : {}),
+      ...(derivedCron ? { cronExpression: derivedCron } : {}),
+      ...(req.body.enabled !== undefined ? { enabled: req.body.enabled } : {}),
+      ...(req.body.defaultTaskType ? { defaultTaskType: req.body.defaultTaskType } : {}),
+      ...(req.body.defaultPromptTemplate !== undefined ? { defaultPromptTemplate: req.body.defaultPromptTemplate } : {})
     });
 
     await bot.save();

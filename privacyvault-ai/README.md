@@ -1,13 +1,22 @@
 # PrivacyVault AI
 
-Privacy-first multimodal SaaS monolith designed for fast shipping today and clean microservice extraction tomorrow.
+Privacy-first multimodal SaaS monolith designed for fast shipping now and clean microservice extraction later.
+
+## Highlights
+
+- OAuth + magic-link authentication with optional premium MFA.
+- Isolated vault model for private multimodal tasks (text/image/voice/video).
+- Dedicated product pages: `/app`, `/vaults`, `/tasks`, `/bots`, `/integrations`, `/settings`, `/upgrade`.
+- Dynamic dashboard metrics, activity feed, privacy score meter, streak gamification, and milestone confetti.
+- Stripe checkout stub + signed Stripe webhook that upgrades users to premium.
+- Modular backend domains under `/backend/src/modules/*` with extraction notes.
 
 ## Stack
 
-- Frontend: React 18, Vite, Tailwind, Redux Toolkit, Socket.io client
-- Backend: Node.js, Express, MongoDB/Mongoose, Socket.io, Passport OAuth, TOTP MFA
-- Shared: Contracts and constants in `/shared`
-- DevOps: Docker, docker-compose, Kubernetes manifests, GitHub Actions
+- Frontend: React 18, Vite, Tailwind CSS, Redux Toolkit, Socket.io client
+- Backend: Node.js, Express, MongoDB/Mongoose, Passport OAuth, JWT, otplib MFA
+- Shared: Contracts/constants in `/shared`
+- DevOps: Docker, docker-compose, Kubernetes manifests, GitHub Actions CI
 
 ## Repository Layout
 
@@ -18,69 +27,114 @@ privacyvault-ai/
   shared/
   docs/
   k8s/
-  .github/workflows/ci.yml
-  Dockerfile
   docker-compose.yml
+  Dockerfile
 ```
+
+## Screenshots
+
+Add your latest screenshots to `docs/screenshots/` and reference them here.
+
+- `docs/screenshots/dashboard-home.png`
+- `docs/screenshots/tasks-page.png`
+- `docs/screenshots/bots-page.png`
+- `docs/screenshots/settings-page.png`
+- `docs/screenshots/upgrade-page.png`
 
 ## Quick Start (Local)
 
-1. Install dependencies:
+1. Install dependencies
 
 ```bash
 npm ci
 ```
 
-2. Copy environment template:
+2. Configure environment
 
 ```bash
 cp .env.example .env
 ```
 
-3. Start MongoDB (local Docker):
+3. Start MongoDB
 
 ```bash
 docker compose up -d mongo
 ```
 
-4. Seed demo data:
+4. Seed demo data
 
 ```bash
 npm run seed
 ```
 
-5. Start backend + frontend:
+5. Run frontend + backend
 
 ```bash
 npm run dev
 ```
 
-6. Open app:
+6. Open the app
 
 - Frontend: `http://localhost:5173`
 - API docs: `http://localhost:8080/api/docs`
+- API docs alias: `http://localhost:8080/api-docs`
 
-## Auth Configuration
+## Environment Variables
 
-Configure `.env` values:
+Required highlights:
 
-- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL`
-- `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_CALLBACK_URL`
-- `FOUNDER_EMAIL` for admin access
+- Auth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`
+- Security: `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `MAGIC_LINK_JWT_SECRET`, `ENCRYPTION_KEY`
+- Billing: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`
+- Frontend pricing override: `VITE_TEAM_PRICE` (default `29`)
 
-Fallback path works with magic links in local development.
+## Product Routes
 
-## Tests
+- `/app` Dashboard home
+- `/vaults` Vault management
+- `/tasks` Global task history + response panel
+- `/bots` Bot builder and recurring automations
+- `/integrations` Vault-scoped encrypted integrations
+- `/settings` Export/reset/MFA/audit/privacy score
+- `/upgrade` Free/Pro/Team pricing and checkout entry
 
-```bash
-npm run test
-npm run e2e
-```
+## Backend API Domains
 
-## Docker
+- `/api/auth/*`
+- `/api/users/*` (includes `/privacy-score`, `/security-status`, `/activity`)
+- `/api/vaults/*`
+- `/api/tasks/*`
+- `/api/bots/*`
+- `/api/integrations/*`
+- `/api/privacy/*`
+- `/api/audit/*`
+- `/api/billing/*`
+- `/api/webhooks/stripe`
+
+## Running with Docker Compose
+
+This compose file runs `mongo + backend + frontend` as separate services:
 
 ```bash
 docker compose up --build
+```
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8080`
+
+## Deployment Starters
+
+- Railway (full stack or backend): `https://railway.app/new`
+- Render (backend): `https://render.com/deploy`
+- Vercel (frontend): `https://vercel.com/new`
+
+## Tests and Quality
+
+```bash
+npm run lint
+npm run test
+npm run build
+npm run e2e
 ```
 
 ## Kubernetes
@@ -93,58 +147,22 @@ kubectl apply -f k8s/ingress.yaml
 kubectl apply -f k8s/hpa.yaml
 ```
 
-Future split examples:
+## Security and Privacy Notes
 
-```bash
-kubectl apply -f k8s/auth-service-split.yaml
-kubectl apply -f k8s/core-service-split.yaml
-```
-
-## Security Highlights
-
-- JWT access + rotating refresh tokens
-- Refresh revocation list
-- CSRF token strategy for cookie-sensitive endpoints
-- Rate limiting, validation, secure headers
-- Encrypted integration credentials
-- Audit logging and irreversible reset flow
-
-## Privacy Commitments
-
-- No training on user data
-- Export and delete controls
-- Vault-level data isolation
-- Transparent audit trail
-
-## Architecture Diagram
-
-```mermaid
-flowchart LR
-    Browser --> Frontend[React App]
-    Frontend --> API[Express Monolith]
-    API --> Mongo[(MongoDB)]
-    API --> Socket[Socket.io]
-    API --> Adapters[OAuth/Email/Edge/Federated Stubs]
-```
-
-## Scale Path to 1M Users
-
-- Vault-keyed partition strategy
-- Socket room scoping by vault
-- Caching + queue abstractions prepared for Redis/Kafka
-- Pagination + indexed queries throughout
-- Kubernetes HPA and split-ready manifests
+- No user vault data is used for training.
+- Vault-scoped access checks enforced server-side.
+- Export + irreversible reset flows available in settings.
+- Stripe webhook signature verification enforced.
 
 ## Known Limitations
 
-- AI/image/speech providers are mocked by default.
-- OAuth requires real provider credentials.
-- Advanced collaboration cryptography is an approximation stub, not full ZKP implementation.
+- AI providers and advanced media generation remain stubbed.
+- Collaboration cryptography is a pragmatic encrypted-link approach, not full ZK.
+- Confetti is lightweight UI-only and not persisted as events.
 
-## Immediate Hardening Tasks
+## Next Hardening Steps
 
-1. Replace all mock providers with audited managed services.
-2. Add SAST/DAST + dependency audit in CI.
-3. Introduce Redis for distributed sessions/rate limits/cache.
-4. Add key-management integration (KMS/HSM).
-5. Implement tenant-aware observability dashboards and alerting.
+1. Add Redis-backed distributed cache/rate limiting/session helpers.
+2. Add SAST/DAST and dependency policies to CI.
+3. Add key management via cloud KMS/HSM.
+4. Add full observability pipeline (logs/metrics/traces/alerts).

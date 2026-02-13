@@ -7,16 +7,24 @@ import { createTask } from '../../slices/taskSlice';
 export default function TaskComposer() {
   const dispatch = useDispatch();
   const selectedVaultId = useSelector((state) => state.vaults.selectedVaultId);
+  const { createStatus, createError } = useSelector((state) => state.tasks);
   const [prompt, setPrompt] = useState('');
   const [type, setType] = useState('text');
   const [file, setFile] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!selectedVaultId) return;
-    await dispatch(createTask({ vaultId: selectedVaultId, prompt, type, file }));
-    setPrompt('');
-    setFile(null);
+    setSuccessMessage('');
+    try {
+      const task = await dispatch(createTask({ vaultId: selectedVaultId, prompt, type, file })).unwrap();
+      setPrompt('');
+      setFile(null);
+      setSuccessMessage(task?.status === 'completed' ? 'Private task completed.' : 'Task submitted.');
+    } catch {
+      // Error is surfaced from redux state.
+    }
   };
 
   return (
@@ -51,8 +59,11 @@ export default function TaskComposer() {
       <UploadZone onFile={setFile} />
       <VoiceRecorder onTranscript={(text) => setPrompt((prev) => `${prev}\n${text}`.trim())} />
 
-      <button className="btn-primary" type="submit">
-        Run Private Task
+      {createError ? <p className="text-sm text-rose-300">{createError}</p> : null}
+      {successMessage ? <p className="text-sm text-emerald-300">{successMessage}</p> : null}
+
+      <button className="btn-primary" type="submit" disabled={createStatus === 'loading'}>
+        {createStatus === 'loading' ? 'Running Private Task…' : 'Run Private Task'}
       </button>
     </form>
   );

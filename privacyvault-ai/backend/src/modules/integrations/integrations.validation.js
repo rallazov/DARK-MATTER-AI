@@ -11,4 +11,8 @@ const providerValidation = [
   param('provider').isString().isLength({ min: 2, max: 80 })
 ];
 
-module.exports = { createIntegrationValidation, providerValidation };
+const deleteIntegrationByIdValidation = [
+  param('id').isMongoId().withMessage('Integration id must be a valid MongoId')
+];
+
+module.exports = { createIntegrationValidation, providerValidation, deleteIntegrationByIdValidation };

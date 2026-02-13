@@ -14,6 +14,7 @@ const {
 } = require('./vaults.validation');
 const { encryptValue } = require('../../utils/crypto');
 
+// TODO: extract to microservice (vault-service boundary)
 const router = express.Router();
 
 router.get('/', requireAuth, async (req, res, next) => {
@@ -111,6 +112,8 @@ router.post('/:vaultId/reset', requireAuth, vaultIdValidation, validate, async (
       { vaultId: req.params.vaultId, isDeleted: false },
       { isDeleted: true, status: 'completed', output: { reset: true }, metadata: { resetAt: new Date() } }
     );
+
+    await Vault.findByIdAndUpdate(req.params.vaultId, { lastResetAt: new Date() });
 
     await recordAudit({
       userId: req.user.id,

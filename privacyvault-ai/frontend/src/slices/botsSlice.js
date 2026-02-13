@@ -25,10 +25,22 @@ export const runBot = createAsyncThunk('bots/run', async (botId) => {
 
 const botsSlice = createSlice({
   name: 'bots',
-  initialState: { items: [], status: 'idle', error: null },
+  initialState: {
+    items: [],
+    status: 'idle',
+    error: null,
+    createStatus: 'idle',
+    createError: null,
+    runStatusById: {},
+    runErrorById: {}
+  },
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(fetchBots.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
       .addCase(fetchBots.fulfilled, (state, action) => {
         state.items = action.payload.items || [];
         state.status = 'succeeded';
@@ -37,8 +49,17 @@ const botsSlice = createSlice({
         state.status = 'failed';
         state.error = action.error?.message;
       })
+      .addCase(createBot.pending, (state) => {
+        state.createStatus = 'loading';
+        state.createError = null;
+      })
       .addCase(createBot.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
+        state.createStatus = 'succeeded';
+      })
+      .addCase(createBot.rejected, (state, action) => {
+        state.createStatus = 'failed';
+        state.createError = action.error?.message || 'Failed to create bot';
       })
       .addCase(updateBot.fulfilled, (state, action) => {
         const i = state.items.findIndex((b) => b._id === action.payload._id);
@@ -46,6 +67,21 @@ const botsSlice = createSlice({
       })
       .addCase(deleteBot.fulfilled, (state, action) => {
         state.items = state.items.filter((b) => b._id !== action.payload);
+      })
+      .addCase(runBot.pending, (state, action) => {
+        const botId = action.meta.arg;
+        state.runStatusById[botId] = 'loading';
+        state.runErrorById[botId] = null;
+      })
+      .addCase(runBot.fulfilled, (state, action) => {
+        const botId = action.meta.arg;
+        state.runStatusById[botId] = 'succeeded';
+        state.runErrorById[botId] = null;
+      })
+      .addCase(runBot.rejected, (state, action) => {
+        const botId = action.meta.arg;
+        state.runStatusById[botId] = 'failed';
+        state.runErrorById[botId] = action.error?.message || 'Failed to run bot';
       });
   }
 });

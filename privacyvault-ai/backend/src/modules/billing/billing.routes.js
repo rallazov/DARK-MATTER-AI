@@ -18,7 +18,8 @@ router.post('/checkout', requireAuth, async (req, res, next) => {
     if (!stripeSecretKey || !stripePriceId) {
       return res.status(503).json({
         error: 'Premium upgrade coming soon',
-        message: 'Configure STRIPE_SECRET_KEY and STRIPE_PRICE_ID to enable payments.'
+        message: 'Configure STRIPE_SECRET_KEY, STRIPE_PRICE_ID, and STRIPE_WEBHOOK_SECRET to enable payments.',
+        contact: 'mailto:premium@privacyvault.ai?subject=PrivacyVault%20Premium%20Waitlist'
       });
     }
 

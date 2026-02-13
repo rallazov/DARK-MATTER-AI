@@ -8,6 +8,7 @@ const vaultSchema = new mongoose.Schema(
     avatar: { type: String, default: 'shield' },
     isDeleted: { type: Boolean, default: false, index: true },
     deletedAt: { type: Date, default: null },
+    lastResetAt: { type: Date, default: Date.now, index: true },
     privacyScore: { type: Number, default: 80 },
     storageUsedBytes: { type: Number, default: 0 },
     shardKey: {

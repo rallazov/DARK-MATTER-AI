@@ -22,10 +22,14 @@ export const deleteIntegration = createAsyncThunk('integrations/delete', async (
 
 const integrationsSlice = createSlice({
   name: 'integrations',
-  initialState: { items: [], status: 'idle', error: null },
+  initialState: { items: [], status: 'idle', error: null, mutateStatus: 'idle', mutateError: null },
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(fetchIntegrations.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
       .addCase(fetchIntegrations.fulfilled, (state, action) => {
         state.items = action.payload.items || [];
         state.status = 'succeeded';
@@ -34,13 +38,31 @@ const integrationsSlice = createSlice({
         state.status = 'failed';
         state.error = action.error?.message;
       })
+      .addCase(createIntegration.pending, (state) => {
+        state.mutateStatus = 'loading';
+        state.mutateError = null;
+      })
       .addCase(createIntegration.fulfilled, (state, action) => {
         state.items.push(action.payload);
+        state.mutateStatus = 'succeeded';
+      })
+      .addCase(createIntegration.rejected, (state, action) => {
+        state.mutateStatus = 'failed';
+        state.mutateError = action.error?.message || 'Failed to add integration';
+      })
+      .addCase(deleteIntegration.pending, (state) => {
+        state.mutateStatus = 'loading';
+        state.mutateError = null;
       })
       .addCase(deleteIntegration.fulfilled, (state, action) => {
         const { byId, byProvider } = action.payload || {};
         if (byId) state.items = state.items.filter((i) => i.id !== byId);
         else if (byProvider) state.items = state.items.filter((i) => i.provider !== byProvider);
+        state.mutateStatus = 'succeeded';
+      })
+      .addCase(deleteIntegration.rejected, (state, action) => {
+        state.mutateStatus = 'failed';
+        state.mutateError = action.error?.message || 'Failed to remove integration';
       });
   }
 });

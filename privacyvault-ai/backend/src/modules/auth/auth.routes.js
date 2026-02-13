@@ -24,6 +24,7 @@ const {
 } = require('./auth.service');
 const { env } = require('../../config/env');
 
+// TODO: extract to microservice (auth-service boundary)
 const router = express.Router();
 
 function strategyAvailable(name) {

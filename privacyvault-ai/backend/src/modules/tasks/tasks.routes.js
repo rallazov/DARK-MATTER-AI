@@ -21,6 +21,7 @@ const {
   listTaskValidation
 } = require('./tasks.validation');
 
+// TODO: extract to microservice (task-service boundary)
 const upload = multer({
   dest: path.resolve(process.cwd(), 'backend/uploads'),
   limits: { fileSize: 25 * 1024 * 1024 }
@@ -123,6 +124,7 @@ router.post('/', requireAuth, upload.single('file'), createTaskValidation, valid
     };
 
     task.output = output;
+    task.response = output;
     task.metadata = {
       ...task.metadata,
       ocrText: processed.ocrText,
@@ -133,25 +135,51 @@ router.post('/', requireAuth, upload.single('file'), createTaskValidation, valid
       ...task.input,
       fileMeta: processed.fileMeta
     };
+    task.mediaUrl = processed.fileMeta ? `/uploads/${processed.fileMeta.filename}` : undefined;
     task.status = 'completed';
+    task.completedAt = new Date();
     await task.save();
 
     const chunks = textResponse.match(/.{1,60}/g) || [textResponse];
     emitTaskStream(io, vaultId, task._id.toString(), chunks);
 
-    await UserProgress.findOneAndUpdate(
-      { userId: req.user.id },
-      {
-        $inc: {
-          currentStreak: 1,
-          weeklyCompletedMinutes: task.metadata.estimatedTimeSavedMinutes,
-          productivityScore: 3
-        },
-        $max: { longestStreak: 1 },
-        $setOnInsert: { badges: ['first-task'] }
-      },
-      { upsert: true, new: true }
-    );
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const yesterdayKey = yesterday.toISOString().slice(0, 10);
+
+    const progress = await UserProgress.findOne({ userId: req.user.id });
+    if (!progress) {
+      await UserProgress.create({
+        userId: req.user.id,
+        currentStreak: 1,
+        longestStreak: 1,
+        badges: ['first-task'],
+        weeklyCompletedMinutes: task.metadata.estimatedTimeSavedMinutes,
+        productivityScore: 3,
+        level: 1,
+        lastActiveDate: new Date()
+      });
+    } else {
+      const lastKey = progress.lastActiveDate ? new Date(progress.lastActiveDate).toISOString().slice(0, 10) : null;
+      if (lastKey !== todayKey) {
+        if (lastKey === yesterdayKey) progress.currentStreak += 1;
+        else progress.currentStreak = 1;
+      }
+
+      progress.longestStreak = Math.max(progress.longestStreak, progress.currentStreak);
+      progress.weeklyCompletedMinutes += task.metadata.estimatedTimeSavedMinutes;
+      progress.productivityScore += 3;
+      progress.level = Math.max(1, Math.floor(progress.productivityScore / 20) + 1);
+      progress.lastActiveDate = new Date();
+
+      const badgeSet = new Set(progress.badges || []);
+      badgeSet.add('first-task');
+      if (progress.currentStreak >= 3) badgeSet.add('streak-3');
+      if (progress.currentStreak >= 7) badgeSet.add('streak-7');
+      progress.badges = Array.from(badgeSet);
+
+      await progress.save();
+    }
 
     emitNotification(io, vaultId, 'Task completed privately in your vault.');
 

@@ -4,7 +4,11 @@ const { validate } = require('../../middleware/validate');
 const { IntegrationCredential } = require('../../models/IntegrationCredential');
 const { assertVaultAccess } = require('../common/vaultAccess');
 const { encryptValue } = require('../../utils/crypto');
-const { createIntegrationValidation, providerValidation } = require('./integrations.validation');
+const {
+  createIntegrationValidation,
+  providerValidation,
+  deleteIntegrationByIdValidation
+} = require('./integrations.validation');
 
 const router = express.Router();
 
@@ -60,7 +64,7 @@ router.post('/', requireAuth, createIntegrationValidation, validate, async (req,
   }
 });
 
-router.delete('/id/:id', requireAuth, async (req, res, next) => {
+router.delete('/id/:id', requireAuth, deleteIntegrationByIdValidation, validate, async (req, res, next) => {
   try {
     const result = await IntegrationCredential.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },

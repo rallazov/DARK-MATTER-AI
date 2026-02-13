@@ -15,10 +15,12 @@ async function runBot(bot, io) {
   const task = await Task.create({
     vaultId: bot.vaultId,
     userId: bot.userId,
-    type: 'automation',
-    prompt: bot.description || 'Automation run',
+    type: bot.defaultTaskType || 'automation',
+    prompt: bot.defaultPromptTemplate || bot.description || 'Automation run',
+    response: output,
     output,
     status: 'completed',
+    completedAt: new Date(),
     metadata: { estimatedTimeSavedMinutes: 15 }
   });
 

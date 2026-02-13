@@ -38,7 +38,8 @@ const env = {
   enableMockAi: String(process.env.ENABLE_MOCK_AI || 'true') === 'true',
   openaiApiKey: process.env.OPENAI_API_KEY,
   stripeSecretKey: process.env.STRIPE_SECRET_KEY,
-  stripePriceId: process.env.STRIPE_PRICE_ID
+  stripePriceId: process.env.STRIPE_PRICE_ID,
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET
 };
 
 module.exports = { env };

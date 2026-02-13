@@ -2,7 +2,7 @@
 
 Base URL: `http://localhost:8080`
 
-- Swagger UI: `/api/docs`
+- Swagger UI: `/api/docs` (alias: `/api-docs`)
 - Health: `/api/health`
 
 ## Main Domains

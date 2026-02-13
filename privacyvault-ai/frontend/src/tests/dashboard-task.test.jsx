@@ -18,7 +18,16 @@ describe('Dashboard task creation', () => {
     const { store } = renderWithProviders(<TaskComposer />, {
       preloadedState: {
         vaults: { items: [{ _id: 'v1', name: 'Vault' }], selectedVaultId: 'v1', status: 'succeeded', error: null },
-        tasks: { items: [], status: 'idle', stream: {}, error: null, filters: { search: '', status: '' } }
+        tasks: {
+          items: [],
+          status: 'idle',
+          stream: {},
+          error: null,
+          createStatus: 'idle',
+          createError: null,
+          latestCompletedTaskId: null,
+          filters: { search: '', status: '' }
+        }
       }
     });
 

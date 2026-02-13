@@ -3,11 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { createIntegration, deleteIntegration, fetchIntegrations } from '../../slices/integrationsSlice';
 import Modal from '../common/Modal';
 
-const PROVIDERS = ['google', 'notion', 'slack'];
+const PROVIDERS = ['google-calendar', 'gmail', 'notion', 'stripe', 'slack'];
 
 export default function IntegrationsPanel() {
   const dispatch = useDispatch();
-  const { items, status } = useSelector((state) => state.integrations);
+  const { items, status, error: loadError, mutateStatus, mutateError } = useSelector((state) => state.integrations);
   const vaults = useSelector((state) => state.vaults.items);
   const selectedVaultId = useSelector((state) => state.vaults.selectedVaultId);
 
@@ -29,7 +29,7 @@ export default function IntegrationsPanel() {
     e.preventDefault();
     setError('');
     try {
-      await dispatch(createIntegration({ vaultId, provider, apiKey, scopes: [] }));
+      await dispatch(createIntegration({ vaultId, provider, apiKey, scopes: [] })).unwrap();
       setApiKey('');
       setOpen(false);
     } catch (err) {
@@ -48,6 +48,8 @@ export default function IntegrationsPanel() {
 
       {!vaults.length ? (
         <p className="text-sm text-slate-400">Create a vault first to add integrations.</p>
+      ) : status === 'failed' ? (
+        <p className="text-sm text-rose-300">{loadError || 'Failed to load integrations.'}</p>
       ) : status === 'succeeded' && items.length === 0 ? (
         <p className="text-sm text-slate-400">No integrations yet. Connect Google, Notion, or Slack to vaults.</p>
       ) : (
@@ -66,6 +68,7 @@ export default function IntegrationsPanel() {
               <button
                 className="text-rose-300 text-xs hover:underline"
                 onClick={() => dispatch(deleteIntegration({ id: i.id }))}
+                disabled={mutateStatus === 'loading'}
               >
                 Remove
               </button>
@@ -117,8 +120,9 @@ export default function IntegrationsPanel() {
             />
           </label>
           {error ? <p className="text-sm text-rose-300">{error}</p> : null}
-          <button className="btn-primary" type="submit">
-            Add
+          {mutateError ? <p className="text-sm text-rose-300">{mutateError}</p> : null}
+          <button className="btn-primary" type="submit" disabled={mutateStatus === 'loading'}>
+            {mutateStatus === 'loading' ? 'Saving…' : 'Add'}
           </button>
         </form>
       </Modal>

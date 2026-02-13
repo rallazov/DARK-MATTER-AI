@@ -13,6 +13,8 @@ export default function VaultCards() {
   const [shareLink, setShareLink] = useState('');
   const [shareVaultId, setShareVaultId] = useState(null);
   const [shareLoading, setShareLoading] = useState(null);
+  const [copiedVaultId, setCopiedVaultId] = useState(null);
+  const [copyErrorVaultId, setCopyErrorVaultId] = useState(null);
 
   const handleCreate = async (event) => {
     event.preventDefault();
@@ -93,12 +95,22 @@ export default function VaultCards() {
                 </a>
                 <button
                   className="mt-1 block text-amber-300 hover:underline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(shareLink);
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(shareLink);
+                      setCopiedVaultId(vault._id);
+                      setCopyErrorVaultId(null);
+                      window.setTimeout(() => {
+                        setCopiedVaultId((current) => (current === vault._id ? null : current));
+                      }, 1500);
+                    } catch {
+                      setCopyErrorVaultId(vault._id);
+                    }
                   }}
                 >
-                  Copy
+                  {copiedVaultId === vault._id ? 'Copied' : 'Copy'}
                 </button>
+                {copyErrorVaultId === vault._id ? <p className="text-rose-300">Copy failed. Please try again.</p> : null}
               </div>
             ) : null}
           </article>

@@ -37,4 +37,7 @@ stringData:
   GOOGLE_CLIENT_SECRET: "replace_me"
   GITHUB_CLIENT_ID: "replace_me"
   GITHUB_CLIENT_SECRET: "replace_me"
+  STRIPE_SECRET_KEY: "replace_me"
+  STRIPE_PRICE_ID: "replace_me"
+  STRIPE_WEBHOOK_SECRET: "replace_me"
   FOUNDER_EMAIL: "founder@example.com"
