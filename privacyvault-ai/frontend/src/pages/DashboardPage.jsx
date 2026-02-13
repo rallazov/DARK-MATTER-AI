@@ -7,12 +7,16 @@ import MetricCard from '../components/common/MetricCard';
 import VaultCards from '../components/dashboard/VaultCards';
 import TaskComposer from '../components/dashboard/TaskComposer';
 import TaskTimeline from '../components/dashboard/TaskTimeline';
+import BotsPanel from '../components/dashboard/BotsPanel';
+import IntegrationsPanel from '../components/dashboard/IntegrationsPanel';
 import PrivacyScoreMeter from '../components/dashboard/PrivacyScoreMeter';
 import NudgeBanner from '../components/dashboard/NudgeBanner';
 import { fetchCurrentUser, logout } from '../slices/authSlice';
 import { fetchVaults } from '../slices/vaultSlice';
+import { fetchBots } from '../slices/botsSlice';
+import { fetchIntegrations } from '../slices/integrationsSlice';
 import { appendStreamChunk, clearStream, deleteTask, fetchTasks } from '../slices/taskSlice';
-import { fetchPrivateAnalytics } from '../slices/progressSlice';
+import { fetchPrivateAnalytics, fetchPrivacyScore } from '../slices/progressSlice';
 import { SOCKET_EVENTS } from '../utils/events';
 import { api } from '../api/client';
 
@@ -30,6 +34,9 @@ export default function DashboardPage() {
     dispatch(fetchCurrentUser());
     dispatch(fetchVaults());
     dispatch(fetchPrivateAnalytics());
+    dispatch(fetchBots());
+    dispatch(fetchIntegrations());
+    dispatch(fetchPrivacyScore());
     api.get('/api/auth/csrf-token').then((data) => localStorage.setItem('pvai_csrf_token', data.csrfToken));
   }, [dispatch]);
 
@@ -116,10 +123,20 @@ export default function DashboardPage() {
         <section className="space-y-4">
           {active === 'Home' ? homeView : null}
           {active === 'Vaults' || active === 'Home' ? <VaultCards /> : null}
+          {selectedVaultId ? (
+            <p className="text-sm text-slate-400">
+              Viewing: <span className="font-medium text-slate-300">{vaults.find((v) => v._id === selectedVaultId)?.name || 'Vault'}</span>
+              {' · '}Tasks and new tasks below go to this vault.
+            </p>
+          ) : vaults.length > 0 ? (
+            <p className="text-sm text-slate-400">Click a vault above to view its tasks and create new ones.</p>
+          ) : null}
           {active === 'Tasks' || active === 'Home' ? <TaskComposer /> : null}
           {active === 'Tasks' || active === 'Home' ? (
             <TaskTimeline tasks={tasks} onDelete={(taskId) => dispatch(deleteTask(taskId))} />
           ) : null}
+          {active === 'Bots' ? <BotsPanel /> : null}
+          {active === 'Integrations' ? <IntegrationsPanel /> : null}
           {active === 'Settings' || active === 'Home' ? <SettingsPanel /> : null}
           {active === 'Upgrade' ? <UpgradePanel vaultCount={vaults.length} /> : null}
         </section>
@@ -177,6 +194,33 @@ export function SettingsPanel() {
 }
 
 export function UpgradePanel({ vaultCount }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const user = useSelector((state) => state.auth.user);
+
+  const handleStartPremium = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const { url } = await api.post('/api/billing/checkout');
+      if (url) window.location.href = url;
+      else setError('Checkout not configured');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (user?.plan === 'premium') {
+    return (
+      <div className="card p-5">
+        <h3 className="text-xl font-semibold">Premium</h3>
+        <p className="mt-2 text-slate-300">You have full access to MFA, share links, and unlimited storage.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="card p-5">
       <h3 className="text-xl font-semibold">Upgrade to Premium</h3>
@@ -185,7 +229,10 @@ export function UpgradePanel({ vaultCount }) {
       </p>
       <p className="mt-2 text-sm text-amber-300">Limited founder-led onboarding slots this month.</p>
       <p className="mt-4 text-sm text-slate-400">Current vault count: {vaultCount}</p>
-      <button className="btn-primary mt-4">Start Premium</button>
+      <button className="btn-primary mt-4" onClick={handleStartPremium} disabled={loading}>
+        {loading ? 'Redirecting…' : 'Start Premium'}
+      </button>
+      {error ? <p className="mt-2 text-sm text-rose-300">{error}</p> : null}
     </div>
   );
 }

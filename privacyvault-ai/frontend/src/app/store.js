@@ -5,6 +5,8 @@ import taskReducer from '../slices/taskSlice';
 import settingsReducer from '../slices/settingsSlice';
 import progressReducer from '../slices/progressSlice';
 import adminReducer from '../slices/adminSlice';
+import botsReducer from '../slices/botsSlice';
+import integrationsReducer from '../slices/integrationsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +15,8 @@ export const store = configureStore({
     tasks: taskReducer,
     settings: settingsReducer,
     progress: progressReducer,
-    admin: adminReducer
+    admin: adminReducer,
+    bots: botsReducer,
+    integrations: integrationsReducer
   }
 });

@@ -22,6 +22,7 @@ const { analyticsRouter } = require('./modules/analytics/analytics.routes');
 const { privacyRouter } = require('./modules/privacy/privacy.routes');
 const { auditRouter } = require('./modules/audit/audit.routes');
 const { adminRouter } = require('./modules/admin/admin.routes');
+const { billingRouter } = require('./modules/billing/billing.routes');
 const { healthRouter } = require('./modules/health/health.routes');
 const { webhooksRouter } = require('./modules/webhooks/webhooks.routes');
 
@@ -74,6 +75,7 @@ function createApp() {
   app.use('/api/privacy', privacyRouter);
   app.use('/api/audit', auditRouter);
   app.use('/api/admin', adminRouter);
+  app.use('/api/billing', billingRouter);
   app.use('/api/webhooks', webhooksRouter);
 
   if (env.enableSwagger) {

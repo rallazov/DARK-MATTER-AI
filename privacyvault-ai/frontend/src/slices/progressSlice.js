@@ -5,10 +5,16 @@ export const fetchPrivateAnalytics = createAsyncThunk('progress/fetchAnalytics',
   return api.get('/api/analytics/me');
 });
 
+export const fetchPrivacyScore = createAsyncThunk('progress/fetchPrivacyScore', async () => {
+  return api.get('/api/users/privacy-score');
+});
+
 const progressSlice = createSlice({
   name: 'progress',
   initialState: {
     insights: null,
+    privacyScore: null,
+    privacyFactors: [],
     status: 'idle'
   },
   reducers: {},
@@ -23,6 +29,10 @@ const progressSlice = createSlice({
       })
       .addCase(fetchPrivateAnalytics.rejected, (state) => {
         state.status = 'failed';
+      })
+      .addCase(fetchPrivacyScore.fulfilled, (state, action) => {
+        state.privacyScore = action.payload.score;
+        state.privacyFactors = action.payload.factors || [];
       });
   }
 });

@@ -16,8 +16,8 @@ router.get('/', requireAuth, async (req, res, next) => {
     const items = await IntegrationCredential.find(query).lean();
     res.json({
       items: items.map((item) => ({
-        id: item._id,
-        vaultId: item.vaultId,
+        id: item._id.toString(),
+        vaultId: item.vaultId?.toString(),
         provider: item.provider,
         scopes: item.scopes,
         createdAt: item.createdAt
@@ -48,7 +48,26 @@ router.post('/', requireAuth, createIntegrationValidation, validate, async (req,
       { upsert: true, new: true }
     );
 
-    res.status(201).json({ id: integration._id, provider: integration.provider, scopes: integration.scopes });
+    res.status(201).json({
+      id: integration._id,
+      vaultId: integration.vaultId,
+      provider: integration.provider,
+      scopes: integration.scopes,
+      createdAt: integration.createdAt
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/id/:id', requireAuth, async (req, res, next) => {
+  try {
+    const result = await IntegrationCredential.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      { isActive: false }
+    );
+    if (!result) return res.status(404).json({ error: 'Integration not found' });
+    res.json({ success: true });
   } catch (error) {
     next(error);
   }

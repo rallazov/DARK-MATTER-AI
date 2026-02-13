@@ -1,5 +1,5 @@
 export default function Sidebar({ active, setActive }) {
-  const items = ['Home', 'Vaults', 'Tasks', 'Settings', 'Upgrade'];
+  const items = ['Home', 'Vaults', 'Tasks', 'Bots', 'Integrations', 'Settings', 'Upgrade'];
 
   return (
     <aside className="card p-3">
