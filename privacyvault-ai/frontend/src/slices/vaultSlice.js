@@ -52,9 +52,16 @@ const vaultSlice = createSlice({
       })
       .addCase(createVault.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
+        state.selectedVaultId = action.payload._id;
       })
       .addCase(deleteVault.fulfilled, (state, action) => {
+        const wasSelected = state.selectedVaultId === action.payload;
         state.items = state.items.filter((vault) => vault._id !== action.payload);
+        if (wasSelected && state.items[0]) {
+          state.selectedVaultId = state.items[0]._id;
+        } else if (wasSelected) {
+          state.selectedVaultId = null;
+        }
       });
   }
 });
